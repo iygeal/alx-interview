@@ -81,6 +81,7 @@ def main():
                 line, total_size, status_codes)
             line_count += 1
 
+            # Print every 10 lines
             if line_count % 10 == 0:
                 print_stats(total_size, status_codes)
 
@@ -89,8 +90,9 @@ def main():
         print_stats(total_size, status_codes)
         raise
 
-    # Print any remaining stats after finishing reading input
-    print_stats(total_size, status_codes)
+    # Print final stats after finishing reading input
+    if line_count % 10 != 0:
+        print_stats(total_size, status_codes)
 
 
 if __name__ == "__main__":
