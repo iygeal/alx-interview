@@ -19,18 +19,18 @@ def validUTF8(data):
 
     # Masks to check the most significant bits
     mask1 = 0b10000000  # 128 in decimal
-    mask2 = 0b11100000  # 192 in decimal
+    mask2 = 0b11000000  # 192 in decimal
 
     for num in data:
         # Get only the least significant 8 bits (simulate 1 byte)
-        byte = num & 0xff
+        byte = num & 0xFF
 
         if num_bytes == 0:
             # Determine how many bytes the UTF-8 character has
             if byte & mask1 == 0:
-                # 1 byte character
+                # 1-byte character (0xxxxxxx)
                 continue
-            elif byte & mask2 == 0b11000000:
+            elif byte & 0b11100000 == 0b11000000:
                 # 2-byte character (110xxxxx)
                 num_bytes = 1
             elif byte & 0b11110000 == 0b11100000:
@@ -40,14 +40,12 @@ def validUTF8(data):
                 # 4-byte character (11110xxx)
                 num_bytes = 3
             else:
-                # Invalid UTF-8 character
+                # Invalid UTF-8 start byte
                 return False
-
         else:
             # For subsequent bytes, check if they start with 10xxxxxx
-            if byte & 0b11000000 != mask1:
+            if byte & mask2 != mask1:
                 return False
-
             num_bytes -= 1
 
     # If num_bytes is not 0, it means we have an incomplete
