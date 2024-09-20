@@ -1,44 +1,57 @@
 #!/usr/bin/node
+
 const request = require('request');
 
-// Retrieve the movie ID from command-line arguments
 const movieId = process.argv[2];
+const filmEndPoint = 'https://swapi-api.hbtn.io/api/films/' + movieId;
+let people = [];
+const names = [];
 
-// Construct the API URL for the specific movie
-const apiUrl = `https://swapi-api.alx-tools.com/api/films/${movieId}/`;
-
-// Function to fetch character names asynchronously
-function fetchCharacter (url) {
-  return new Promise((resolve, reject) => {
-    request(url, (error, response, body) => {
-      if (!error) {
-        const characterData = JSON.parse(body);
-        resolve(characterData.name); // Resolve with character name
+const requestCharacters = async () => {
+  await new Promise((resolve) =>
+    request(filmEndPoint, (err, res, body) => {
+      if (err || res.statusCode !== 200) {
+        console.error('Error: ', err, '| StatusCode: ', res.statusCode);
       } else {
-        reject(error); // Reject if there's an error
+        const jsonBody = JSON.parse(body);
+        people = jsonBody.characters;
+        resolve();
       }
-    });
-  });
-}
+    })
+  );
+};
 
-// Make an API request to get the movie data
-request(apiUrl, async (error, response, body) => {
-  if (error) {
-    console.error('Error:', error);
-  } else {
-    const movieData = JSON.parse(body);
-    const characters = movieData.characters;
-
-    // Use Promise.all to fetch all character names concurrently
-    try {
-      const characterNames = await Promise.all(
-        characters.map((url) => fetchCharacter(url))
+const requestNames = async () => {
+  if (people.length > 0) {
+    for (const p of people) {
+      await new Promise((resolve) =>
+        request(p, (err, res, body) => {
+          if (err || res.statusCode !== 200) {
+            console.error('Error: ', err, '| StatusCode: ', res.statusCode);
+          } else {
+            const jsonBody = JSON.parse(body);
+            names.push(jsonBody.name);
+            resolve();
+          }
+        })
       );
+    }
+  } else {
+    console.error('Error: Got no Characters for some reason');
+  }
+};
 
-      // Print characters in order after all requests complete
-      characterNames.forEach((name) => console.log(name));
-    } catch (err) {
-      console.error('Error fetching characters:', err);
+const getCharNames = async () => {
+  await requestCharacters();
+  await requestNames();
+
+  for (const n of names) {
+    if (n === names[names.length - 1]) {
+      process.stdout.write(n);
+    } else {
+      process.stdout.write(n + '\n');
     }
   }
-});
+};
+
+getCharNames();
