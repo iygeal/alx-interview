@@ -1,39 +1,40 @@
 #!/usr/bin/node
-// Import the request module to make HTTP requests
 const request = require('request');
 
-// Get the movie ID from the command line arguments
+// Retrieve the movie ID from command-line arguments
 const movieId = process.argv[2];
 
-// Construct the API URL for the specific movie using the movie ID
-const apiUrl = `https://swapi-api.alx-tools.com/api/films/${movieId}`;
+// Construct the API URL for the specific movie
+const apiUrl = `https://swapi-api.alx-tools.com/api/films/${movieId}/`;
 
-// Make a request to the Star Wars API to get movie details
+// Function to fetch character names recursively
+function fetchCharacter (idx, characters) {
+  if (idx === characters.length) {
+    return; // Stop when all characters have been printed
+  }
+
+  request(characters[idx], function (error, response, body) {
+    if (!error) {
+      const characterData = JSON.parse(body);
+      console.log(characterData.name);
+
+      // Recursive call to fetch the next character
+      fetchCharacter(idx + 1, characters);
+    } else {
+      console.error('Error fetching character:', error);
+    }
+  });
+}
+
+// Make an API request to get the movie data
 request(apiUrl, function (error, response, body) {
   if (error) {
     console.error('Error:', error);
-    return;
+  } else {
+    const movieData = JSON.parse(body);
+    const characters = movieData.characters;
+
+    // Start fetching the characters one by one, in order
+    fetchCharacter(0, characters);
   }
-
-  // Parse the response body into JSON
-  const movieData = JSON.parse(body);
-
-  // Retrieve the character URLs from the movie data
-  const characterUrls = movieData.characters;
-
-  // Function to fetch each character's name
-  function fetchCharacterName (url) {
-    request(url, function (error, response, body) {
-      if (error) {
-        console.error('Error:', error);
-        return;
-      }
-      // Parse the character data and print the name
-      const characterData = JSON.parse(body);
-      console.log(characterData.name);
-    });
-  }
-
-  // Loop through the character URLs and fetch each character's name
-  characterUrls.forEach((url) => fetchCharacterName(url));
 });
