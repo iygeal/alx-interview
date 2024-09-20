@@ -22,7 +22,7 @@ request(apiUrl, function (error, response, body) {
   const characterUrls = movieData.characters;
 
   // Function to fetch each character's name
-  function fetchCharacterName(url) {
+  function fetchCharacterName (url) {
     request(url, function (error, response, body) {
       if (error) {
         console.error('Error:', error);
